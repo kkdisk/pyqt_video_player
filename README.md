@@ -1,4 +1,4 @@
-# PyQt6 影片播放器 (PyQt6 Video Player) v1.0.0
+# PyQt6 影片播放器 (PyQt6 Video Player) v1.1.0
 
 這是一個使用 Python 和 PyQt6 (QtMultimedia) 建構的現代化、輕量級影片播放器。
 
