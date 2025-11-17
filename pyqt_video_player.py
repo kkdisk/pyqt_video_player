@@ -1,22 +1,21 @@
 # ==============================================================================
-# PyQt6 影片播放器 - v1.2.0
+# PyQt6 影片播放器 - v1.2.1 (修訂版)
 #
 # 說明：
 # 這是一個使用 PyQt6.QtMultimedia 建構的現代影片播放器。
 #
+# v1.2.1 修訂日誌:
+# - [修正] 快捷鍵焦點: 修正當 QComboBox (播放速度) 或 QListWidget (播放清單)
+#   取得焦點時，空白鍵 (Space) 仍會觸發播放/暫停的 Bug。
+# - [優化] 圖示處理: 重構 _create_action() 函式，改為使用 QStyle.StandardPixmap
+#   以確保圖示的跨平台一致性。
+#
 # v1.2.0 更新日誌:
 # - [新增] 播放速度控制: 新增 QComboBox 以調整 0.5x ~ 2.0x 速度。
-# - [新增] 快捷鍵強化:
-#   - M: 切換靜音
-#   - ←/→: 倒退/快轉 5 秒
-#   - ↑/↓: 調整音量
-# - [新增] 影片右鍵選單: 在影片畫面上按右鍵可開啟快捷選單。
+# - [新增] 快捷鍵強化 (M, ←/→, ↑/↓)
+# - [新增] 影片右鍵選單。
 # - [修正] 音量圖示: 圖示現在會正確反映靜音狀態。
 # - [修正] 調整音量時會自動取消靜音。
-#
-# v1.1.3 更新日誌:
-# - [修正] 修正 create_docks() 導致的 AttributeError。
-#
 # ==============================================================================
 
 import sys
@@ -54,7 +53,7 @@ except ImportError:
 # ==============================================================================
 class Config:
     """集中管理應用程式的所有設定。"""
-    APP_TITLE: str = "PyQt6 影片播放器 v1.2.0"
+    APP_TITLE: str = "PyQt6 影片播放器 v1.2.1" # [修改 v1.2.1] 更新標題版本
     ORGANIZATION_NAME: str = "MyVideoPlayer" # 用於 QSettings
     APP_NAME: str = "PyQt6VideoPlayer"    # 用於 QSettings
     DEFAULT_WINDOW_SIZE: QSize = QSize(1000, 700)
@@ -296,36 +295,46 @@ class VideoPlayerWindow(QMainWindow):
         # 6. 載入上次的設定
         self.load_settings()
 
+    # [修改 v1.2.1] 替換 create_actions
     def create_actions(self) -> None:
         """建立選單和工具列的 QAction"""
+        
+        # (修正) 改為傳遞 QStyle.StandardPixmap 枚舉
         self.open_action = self._create_action(
-            "開啟影片...", "document-open", QKeySequence.StandardKey.Open, self.open_file_dialog
+            "開啟影片...", QStyle.StandardPixmap.SP_DialogOpenButton, 
+            QKeySequence.StandardKey.Open, self.open_file_dialog
         )
         self.open_folder_action = self._create_action(
-            "開啟資料夾...", "folder-open", "Ctrl+Shift+O", self.open_folder_dialog
+            "開啟資料夾...", QStyle.StandardPixmap.SP_DirOpenIcon, 
+            "Ctrl+Shift+O", self.open_folder_dialog
         )
         self.exit_action = self._create_action(
-            "離開", "application-exit", QKeySequence.StandardKey.Quit, self.close
+            "離開", QStyle.StandardPixmap.SP_DialogCloseButton, 
+            QKeySequence.StandardKey.Quit, self.close
         )
+        
         self.toggle_playlist_action = QAction("切換播放清單", self)
         self.toggle_playlist_action.triggered.connect(self.playlist_dock.toggleViewAction)
         
         self.toggle_theme_action = self._create_action(
-            "切換主題", "preferences-desktop-theme", "Ctrl+T", self.theme_manager.toggle_theme
+            "切換主題", QStyle.StandardPixmap.SP_DesktopIcon, # (示意圖示)
+            "Ctrl+T", self.theme_manager.toggle_theme
         )
 
         self.add_files_action = self._create_action(
-            "新增檔案", "list-add", None, self._on_add_files
+            "新增檔案", QStyle.StandardPixmap.SP_FileDialogNewFolder, # (示意圖示)
+            None, self._on_add_files
         )
         self.remove_item_action = self._create_action(
-            "移除選中", "list-remove", QKeySequence.StandardKey.Delete, self._on_remove_items
+            "移除選中", QStyle.StandardPixmap.SP_DialogCancelButton, # (示意圖示)
+            QKeySequence.StandardKey.Delete, self._on_remove_items
         )
         self.clear_list_action = self._create_action(
-            "清空清單", "edit-clear", None, self._on_clear_list
+            "清空清單", QStyle.StandardPixmap.SP_DialogResetButton, # (示意圖示)
+            None, self._on_clear_list
         )
         
-        # [v1.2] 右鍵選單和快捷鍵會用到的動作 (雖然有些是動態建立的)
-        # 預先建立 QAction 有助於管理 (雖然在選單中我們是動態建立文字)
+        # [v1.2] 右鍵選單和快捷鍵會用到的動作
         self.mute_action = QAction("靜音", self)
         self.mute_action.triggered.connect(self._toggle_mute)
         
@@ -802,25 +811,19 @@ class VideoPlayerWindow(QMainWindow):
     # 輔助方法 (Helper Methods)
     # --------------------------------------------------------------------------
 
-    def _create_action(self, text, icon_name, shortcut, slot) -> QAction:
-        """輔助函數：建立 QAction"""
-        icon = QIcon.fromTheme(icon_name)
-        if icon.isNull():
-            try:
-                pixmap_name = "SP_" + icon_name.replace("-", " ").title().replace(" ", "")
-                if "Open" in pixmap_name: pixmap_name = "SP_DialogOpenButton"
-                if "Save" in pixmap_name: pixmap_name = "SP_DialogSaveButton"
-                if "Exit" in pixmap_name: pixmap_name = "SP_DialogCloseButton"
-                if "Theme" in pixmap_name: pixmap_name = "SP_DesktopIcon"
-                if "Folder-Open" in pixmap_name: pixmap_name = "SP_DirOpenIcon"
-                if "List-Add" in pixmap_name: pixmap_name = "SP_FileDialogNewFolder"
-                if "List-Remove" in pixmap_name: pixmap_name = "SP_DialogCancelButton"
-                if "Edit-Clear" in pixmap_name: pixmap_name = "SP_DialogResetButton"
-                std_icon = getattr(QStyle.StandardPixmap, pixmap_name, QStyle.StandardPixmap.SP_FileIcon)
-                icon = self.style().standardIcon(std_icon)
-            except Exception:
-                icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)
-                
+    # [修改 v1.2.1] 替換 _create_action
+    def _create_action(self, 
+                         text: str, 
+                         std_icon: Optional[QStyle.StandardPixmap], 
+                         shortcut: Optional[str | QKeySequence], 
+                         slot: callable) -> QAction:
+        """輔助函數：建立 QAction (優先使用 QStyle.StandardPixmap)"""
+        
+        icon = QIcon()
+        if std_icon is not None:
+            # 使用標準圖示
+            icon = self.style().standardIcon(std_icon)
+
         action = QAction(icon, text, self)
         if shortcut:
             action.setShortcut(QKeySequence(shortcut))
@@ -879,7 +882,7 @@ class VideoPlayerWindow(QMainWindow):
                 self.playlist_widget.addItem(item)
                     
         except Exception as e:
-            print(f"掃描資料夾時出錯: {e}")
+            print(f"掃描資料G時出錯: {e}")
             
     def _play_next(self) -> None:
         """[v1.1] 播放清單中的下一個項目"""
@@ -942,19 +945,27 @@ class VideoPlayerWindow(QMainWindow):
     # 事件處理 (Event Handlers)
     # --------------------------------------------------------------------------
 
+    # [修改 v1.2.1] 替換 keyPressEvent
     def keyPressEvent(self, event) -> None:
-        """[v1.2] 全域快捷鍵 (強化版)"""
+        """[v1.2.1] 全域快捷鍵 (焦點修正版)"""
         key = event.key()
         
-        # 檢查焦點是否在 QListWidget 或 QComboBox 上
-        if self.playlist_widget.hasFocus() or self.rate_combo.hasFocus():
-            if key == Qt.Key.Key_Delete and self.playlist_widget.hasFocus():
-                 self._on_remove_items()
-            elif key in (Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right):
-                super().keyPressEvent(event) # 讓元件自己處理方向鍵
-            else:
-                 pass # 繼續處理其他快捷鍵
-        
+        # [修正] 檢查焦點是否在 QListWidget 或 QComboBox 上
+        focused_widget = QApplication.focusWidget()
+
+        if focused_widget == self.playlist_widget or focused_widget == self.rate_combo:
+            # 如果焦點在播放清單上
+            if focused_widget == self.playlist_widget:
+                if key == Qt.Key.Key_Delete:
+                    self._on_remove_items()
+                    event.accept() # 標記事件已處理
+                    return # (修正) 直接返回
+            
+            # (修正) 對於所有其他按鍵 (例如 QComboBox 的空白鍵、方向鍵等)
+            # 讓元件自行處理
+            super().keyPressEvent(event)
+            return # (修正) 直接返回，不觸發下面的全域快捷鍵
+
         # --- 全域快捷鍵 (不在輸入元件上時) ---
         if event.modifiers() == Qt.KeyboardModifier.NoModifier:
             if key == Qt.Key.Key_Space:
