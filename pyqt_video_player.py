@@ -313,8 +313,9 @@ class VideoPlayerWindow(QMainWindow):
             QKeySequence.StandardKey.Quit, self.close
         )
         
-        self.toggle_playlist_action = QAction("切換播放清單", self)
-        self.toggle_playlist_action.triggered.connect(self.playlist_dock.toggleViewAction)
+        # (修正) 使用 dock 提供的 toggle action 物件，而非創建新的 QAction 並嘗試 connect
+        self.toggle_playlist_action = self.playlist_dock.toggleViewAction()
+        self.toggle_playlist_action.setText("切換播放清單")
         
         self.toggle_theme_action = self._create_action(
             "切換主題", QStyle.StandardPixmap.SP_DesktopIcon, # (示意圖示)
@@ -742,11 +743,9 @@ class VideoPlayerWindow(QMainWindow):
         play_pause_action.triggered.connect(self.toggle_play_pause)
         menu.addAction(play_pause_action)
 
-        # 2. 靜音
-        mute_text = "取消靜音" if self.is_muted else "靜音"
-        mute_action = QAction(mute_text, self)
-        mute_action.triggered.connect(self._toggle_mute)
-        menu.addAction(mute_action)
+        # 2. 靜音 —— 重用 self.mute_action，並即時更新文字
+        self.mute_action.setText("取消靜音" if self.is_muted else "靜音")
+        menu.addAction(self.mute_action)
         
         # 3. 全螢幕
         fullscreen_text = "退出全螢幕" if self.isFullScreen() else "全螢幕"
@@ -756,14 +755,11 @@ class VideoPlayerWindow(QMainWindow):
 
         menu.addSeparator()
 
-        # 4. 快轉/倒退
-        seek_forward_action = QAction(f"快轉 {Config.SEEK_STEP_MS // 1000} 秒 (→)", self)
-        seek_forward_action.triggered.connect(self._seek_forward)
-        menu.addAction(seek_forward_action)
-        
-        seek_backward_action = QAction(f"倒退 {Config.SEEK_STEP_MS // 1000} 秒 (←)", self)
-        seek_backward_action.triggered.connect(self._seek_backward)
-        menu.addAction(seek_backward_action)
+        # 4. 快轉/倒退 —— 重用已建立 action，並更新描述（若需要）
+        self.seek_forward_action.setText(f"快轉 {Config.SEEK_STEP_MS // 1000} 秒 (→)")
+        menu.addAction(self.seek_forward_action)
+        self.seek_backward_action.setText(f"倒退 {Config.SEEK_STEP_MS // 1000} 秒 (←)")
+        menu.addAction(self.seek_backward_action)
 
         menu.addSeparator()
         
@@ -950,21 +946,19 @@ class VideoPlayerWindow(QMainWindow):
         """[v1.2.1] 全域快捷鍵 (焦點修正版)"""
         key = event.key()
         
-        # [修正] 檢查焦點是否在 QListWidget 或 QComboBox 上
+        # [修正] 使用 isinstance 檢查焦點是否在可輸入/列表元件上
         focused_widget = QApplication.focusWidget()
 
-        if focused_widget == self.playlist_widget or focused_widget == self.rate_combo:
-            # 如果焦點在播放清單上
-            if focused_widget == self.playlist_widget:
-                if key == Qt.Key.Key_Delete:
-                    self._on_remove_items()
-                    event.accept() # 標記事件已處理
-                    return # (修正) 直接返回
-            
-            # (修正) 對於所有其他按鍵 (例如 QComboBox 的空白鍵、方向鍵等)
-            # 讓元件自行處理
+        # 讓 QListWidget 或 QComboBox 等 widget 自行處理大部分鍵盤事件
+        if isinstance(focused_widget, (QListWidget, QComboBox)):
+            # 如果焦點在播放清單上且按下 Delete，則處理刪除
+            if isinstance(focused_widget, QListWidget) and key == Qt.Key.Key_Delete:
+                self._on_remove_items()
+                event.accept()
+                return
+            # 其他情況讓該 widget 處理自己的事件
             super().keyPressEvent(event)
-            return # (修正) 直接返回，不觸發下面的全域快捷鍵
+            return
 
         # --- 全域快捷鍵 (不在輸入元件上時) ---
         if event.modifiers() == Qt.KeyboardModifier.NoModifier:
