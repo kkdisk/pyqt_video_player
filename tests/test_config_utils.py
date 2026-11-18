@@ -1,7 +1,15 @@
 """測試 player.config 模組的設定與純邏輯工具函式。"""
 
 import os
-from player.config import RepeatMode, format_time, is_supported_video, normalize_path
+from player.config import (
+    AspectRatioOption,
+    RepeatMode,
+    build_snapshot_filename,
+    calculate_aspect_rect,
+    format_time,
+    is_supported_video,
+    normalize_path,
+)
 
 
 def test_format_time_zero_and_negative() -> None:
@@ -40,3 +48,30 @@ def test_repeat_mode_enum_values() -> None:
     assert RepeatMode.NONE == 0
     assert RepeatMode.ONE == 1
     assert RepeatMode.ALL == 2
+
+
+def test_calculate_aspect_rect() -> None:
+    # AUTO 與 FILL 應填滿整個容器
+    assert calculate_aspect_rect(1000, 800, AspectRatioOption.AUTO) == (0, 0, 1000, 800)
+    assert calculate_aspect_rect(1000, 800, AspectRatioOption.FILL) == (0, 0, 1000, 800)
+
+    # 16:9 在 1600x1200 (4:3 容器) 下，寬應為 1600，高應為 900，y 置中為 150
+    assert calculate_aspect_rect(1600, 1200, AspectRatioOption.RATIO_16_9) == (
+        0,
+        150,
+        1600,
+        900,
+    )
+
+    # 4:3 在 1920x1080 (16:9 容器) 下，高應為 1080，寬應為 1440，x 置中為 240
+    assert calculate_aspect_rect(1920, 1080, AspectRatioOption.RATIO_4_3) == (
+        240,
+        0,
+        1440,
+        1080,
+    )
+
+
+def test_build_snapshot_filename() -> None:
+    fname = build_snapshot_filename("C:/Videos/my:movie?.mp4", 65_000, "20261118_183000")
+    assert fname == "my_movie__01-05_20261118_183000.png"

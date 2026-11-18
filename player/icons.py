@@ -182,6 +182,28 @@ _SVG_TEMPLATES: Dict[str, str] = {
         '<polygon points="10.5 9.5 15 12 10.5 14.5 10.5 9.5" fill="{color}"/>'
         "</svg>"
     ),
+    "camera": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>'
+        '<circle cx="12" cy="13" r="4"/>'
+        "</svg>"
+    ),
+    "subtitles": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        '<rect x="2" y="4" width="20" height="16" rx="2.5"/>'
+        '<path d="M6 12h4M14 12h4M6 16h8M16 16h2"/>'
+        "</svg>"
+    ),
+    "aspect_ratio": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        '<rect x="2" y="4" width="20" height="16" rx="2.5"/>'
+        '<polyline points="6 10 6 7 9 7"/>'
+        '<polyline points="18 14 18 17 15 17"/>'
+        "</svg>"
+    ),
 }
 
 

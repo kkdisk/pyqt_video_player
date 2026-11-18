@@ -1,7 +1,7 @@
 """自訂 PyQt6 播放器 UI 元件。"""
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QMouseEvent
+from PyQt6.QtGui import QMouseEvent, QResizeEvent
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import (
     QFrame,
@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from player.config import AspectRatioOption, calculate_aspect_rect
 from player.icons import create_icon, render_svg_pixmap
 
 
@@ -79,6 +80,67 @@ class PlayerVideoWidget(QVideoWidget):
             event.accept()
             return
         super().mouseDoubleClickEvent(event)
+
+
+class VideoCanvasContainer(QWidget):
+    """可動態控制影片畫面比例 (Auto / 16:9 / 4:3 / Fill) 與外掛字幕顯示的畫布容器。"""
+
+    def __init__(self, video_widget: PlayerVideoWidget, parent=None) -> None:
+        super().__init__(parent)
+        self.setObjectName("VideoCanvasContainer")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.video_widget = video_widget
+        self.aspect_mode: AspectRatioOption = AspectRatioOption.AUTO
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.viewport_area = QWidget(self)
+        self.viewport_area.setObjectName("VideoCanvasContainer")
+        self.viewport_area.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.video_widget.setParent(self.viewport_area)
+        layout.addWidget(self.viewport_area, 1)
+
+        self.subtitle_banner = QLabel("")
+        self.subtitle_banner.setObjectName("SubtitleBanner")
+        self.subtitle_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.subtitle_banner.setWordWrap(True)
+        self.subtitle_banner.setVisible(False)
+        layout.addWidget(self.subtitle_banner, 0)
+
+    def set_aspect_ratio_mode(self, mode: AspectRatioOption) -> None:
+        """設定畫面比例模式並立即重新計算影片視口幾何位置。"""
+        self.aspect_mode = mode
+        if mode == AspectRatioOption.AUTO:
+            self.video_widget.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+        else:
+            self.video_widget.setAspectRatioMode(Qt.AspectRatioMode.IgnoreAspectRatio)
+        self._relayout_video()
+
+    def set_subtitle_text(self, text: str) -> None:
+        """設定外掛字幕文字（空字串時自動隱藏字幕列）。"""
+        if text:
+            self.subtitle_banner.setText(text)
+            if not self.subtitle_banner.isVisible():
+                self.subtitle_banner.setVisible(True)
+                self._relayout_video()
+        else:
+            if self.subtitle_banner.isVisible():
+                self.subtitle_banner.setText("")
+                self.subtitle_banner.setVisible(False)
+                self._relayout_video()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._relayout_video()
+
+    def _relayout_video(self) -> None:
+        vw = self.viewport_area.width()
+        vh = self.viewport_area.height()
+        x, y, w, h = calculate_aspect_rect(vw, vh, self.aspect_mode)
+        self.video_widget.setGeometry(x, y, w, h)
 
 
 class EmptyStateWidget(QWidget):

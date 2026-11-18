@@ -179,6 +179,17 @@ class ThemeManager:
         QVideoWidget {{
             background-color: #000000;
         }}
+        QWidget#VideoCanvasContainer {{
+            background-color: #000000;
+        }}
+        QLabel#SubtitleBanner {{
+            background-color: rgba(15, 15, 20, 0.85);
+            color: #FFFFFF;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 6px 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }}
         QWidget#EmptyStateContainer {{
             background-color: {t.bg_canvas};
         }}
@@ -323,6 +334,8 @@ class ThemeManager:
         QPushButton#NextButton,
         QPushButton#RepeatButton,
         QPushButton#ShuffleButton,
+        QPushButton#SnapshotButton,
+        QPushButton#TracksButton,
         QPushButton#VolumeButton,
         QPushButton#FullscreenButton,
         QPushButton#DockCloseButton {{
@@ -336,6 +349,8 @@ class ThemeManager:
         QPushButton#NextButton:hover,
         QPushButton#RepeatButton:hover,
         QPushButton#ShuffleButton:hover,
+        QPushButton#SnapshotButton:hover,
+        QPushButton#TracksButton:hover,
         QPushButton#VolumeButton:hover,
         QPushButton#FullscreenButton:hover,
         QPushButton#DockCloseButton:hover {{
@@ -346,14 +361,32 @@ class ThemeManager:
         QPushButton#NextButton:pressed,
         QPushButton#RepeatButton:pressed,
         QPushButton#ShuffleButton:pressed,
+        QPushButton#SnapshotButton:pressed,
+        QPushButton#TracksButton:pressed,
         QPushButton#VolumeButton:pressed,
         QPushButton#FullscreenButton:pressed {{
             background-color: {t.bg_pressed};
         }}
         QPushButton#RepeatButton:checked,
-        QPushButton#ShuffleButton:checked {{
+        QPushButton#ShuffleButton:checked,
+        QPushButton#TracksButton:checked {{
             background-color: {t.accent_soft};
             border-color: {t.accent};
+        }}
+        QPushButton#AspectRatioButton {{
+            background-color: {t.bg_elevated};
+            color: {t.text_primary};
+            border: 1px solid {t.border};
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }}
+        QPushButton#AspectRatioButton:hover {{
+            background-color: {t.bg_hover};
+        }}
+        QPushButton#AspectRatioButton:disabled {{
+            color: {t.text_muted};
         }}
 
         /* === 進度條與音量條 === */
