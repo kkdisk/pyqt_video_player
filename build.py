@@ -2,7 +2,7 @@
 # PyInstaller 打包腳本 for PyQt6 影片播放器
 #
 # 說明：
-# 此腳本使用 PyInstaller 將 video_player.py 打包成一個單一的可執行檔案 (.exe)。
+# 此腳本使用 PyInstaller 將 pyqt_video_player.py 與 player 套件打包成單一執行檔 (.exe)。
 #
 # 它會自動處理 PyQt6 和 QtMultimedia 的隱藏導入 (hidden-import) 問題。
 #
@@ -43,10 +43,11 @@ pyinstaller_args = [
     '--windowed',      # GUI 應用程式，執行時不顯示黑色主控台
     '--clean',           # 建置前清理快取
     
-    # --- 關鍵：處理 PyQt6 多媒體依賴 ---
-    # PyInstaller 常常找不到 QtMultimedia，我們需要手動告訴它：
+    # --- 關鍵：處理 PyQt6 多媒體與內部套件依賴 ---
     '--hidden-import=PyQt6.QtMultimedia',
     '--hidden-import=PyQt6.QtMultimediaWidgets',
+    '--hidden-import=PyQt6.QtSvg',
+    '--collect-submodules=player',
     
     # --- 圖示 (可選) ---
     icon_arg,

@@ -1,90 +1,55 @@
-# PyQt6 影片播放器 (PyQt6 Video Player) v1.2.0
+# PyQt6 影片播放器 (PyQt6 Video Player) v1.3.0
 
-這是一個使用 Python 和 PyQt6 (QtMultimedia) 建構的現代化、輕量級影片播放器。
+這是一個使用 Python 和 PyQt6 (`QtMultimedia`) 建構的現代化、輕量級桌面影片播放器。
 
-本專案旨在展示如何使用 PyQt6 打造一個功能完整、介面美觀且響應流暢的桌面媒體應用程式。
+## 功能特色
 
-## v1.2.0
+- **核心播放**：
+  - 使用 `QMediaPlayer` 與 `QVideoWidget` 實現流暢的影片播放。
+  - 支援常見影片格式（`.mp4`, `.avi`, `.mkv`, `.mov`, `.wmv`, `.flv`, `.webm`, `.m4v`）。
+- **播放控制**：
+  - 播放 / 暫停 / 停止（快捷鍵：`Space`）。
+  - 支援**點擊進度條任意位置直接跳轉**與滑桿拖曳預覽。
+  - 支援超過 1 小時的 `HH:MM:SS` 時間顯示。
+  - 循環播放（關閉 / 單一 / 清單全部）與隨機播放（自動記憶與還原原始清單順序）。
+  - 播放速度控制（`0.5x` ~ `2.0x`），切換影片時自動保留所選倍速。
+- **播放清單與拖放**：
+  - 可停靠的播放清單面板，支援多選刪除與工具列操作。
+  - 支援一次拖放單一或多個影片檔案，或直接拖放資料夾載入清單。
+- **介面與設定記憶**：
+  - 深色 / 淺色主題切換（快捷鍵：`Ctrl+T`）。
+  - 無邊框全螢幕模式（快捷鍵：`F11`、`Esc` 或**雙擊影片畫面**），自動隱藏工具列、清單與狀態列。
+  - 自動保存視窗幾何位置、音量、靜音、循環、隨機與主題設定。
 
-- 核心播放:
+## 專案結構
 
-    - 使用 QMediaPlayer 和 QVideoWidget 實現流暢的影片播放。
-    - 支援常見影片格式 (MP4, AVI, MKV, MOV 等)。
-
-- 播放控制:
-
-    - 播放 / 暫停 (快捷鍵: Space)
-    - 停止
-    - 可拖動的影片進度條
-    - 可調整的音量條
-    - 即時時間顯示 (例如 01:23 / 10:45)
-    - (v1.1 新增) 循環播放: (關閉 / 單一循環 / 清單循環)
-    - (v1.1 新增) 隨機播放: 切換隨機播放順序
-    - (v1.1 新增) 自動播放: 影片結束後自動播放下一首
-    - (v1.2 新增) 播放速度控制: (0.5x, 0.75x, 1.0x, 1.5x, 2.0x)
-
-- 播放清單:
-
-    - 可停靠的播放清單面板。
-    - 自動載入: 開啟影片或資料夾時，自動掃描並載入同目錄下的所有支援影片。
-    - 雙擊播放: 雙擊清單中的項目可立即播放。
-    - (v1.1 新增) 清單工具列: (新增檔案 / 移除選中 / 清空清單)。
-    - (v1.1 新增) 支援多選 (Ctrl / Shift 點選)。
-
-- 介面 (UI):
-
-    - 預設啟用精美的深色主題。
-    - 支援全螢幕切換 (快捷鍵: F11 或 Esc 退出)。
-    - 支援拖曳檔案或資料夾到視窗中以開啟。
-    - (v1.1 新增) 狀態保存: 自動記住上次的視窗大小、位置和音量。
-    - (v1.2 新增) 影片右鍵選單: 提供播放/暫停、靜音、快轉/倒退、全螢幕等快捷操作。
-
-- 快捷鍵:
-
-    - Space : 播放 / 暫停
-    - M : 切換靜音
-    - F11 : 切換全螢幕
-    - Esc : 退出全螢幕
-    - ← (方向鍵左) : 倒退 5 秒
-    - → (方向鍵右) : 快轉 5 秒
-    - ↑ (方向鍵上) : 音量增加 5%
-    - ↓ (方向鍵下) : 音量減少 5%    
-
-## 安裝
-
-在開始之前，請確保您的系統已安裝 Python 3.x。
-
-1. 克隆 (Clone) 或下載此儲存庫:
-
-```
- git clone [您的 GitHub 儲存庫 URL] 
- cd [您的專案資料夾] `
+```text
+pyqt_video_player_github/
+├── pyqt_video_player.py   # 相容啟動入口
+├── player/                # 核心模組套件
+│   ├── config.py          # 設定常數、RepeatMode 與時間/路徑工具函式
+│   ├── playlist.py        # PlaylistManager 播放清單狀態管理
+│   ├── theme.py           # ThemeManager 深/淺色主題管理
+│   ├── widgets.py         # ClickableSlider 與 PlayerVideoWidget
+│   └── main_window.py     # VideoPlayerWindow 主視窗協調器
+├── tests/                 # pytest 單元測試
+├── build.py               # PyInstaller Windows 打包腳本
+└── requirements.txt       # 依賴套件清單
 ```
 
-2. 安裝所需的套件: 本專案使用 PyQt6。建議在虛擬環境 (virtual environment) 中安裝：
-```
-# (可選) 建立虛擬環境
+## 安裝與執行
+
+```bash
 python -m venv .venv
-# (可選) 啟動虛擬環境
-# Windows:
-# .\.venv\Scripts\activate
-# macOS / Linux:
-# source .venv/bin/activate
+# Windows: .\.venv\Scripts\activate
+# macOS / Linux: source .venv/bin/activate
 
-# 安裝依賴
 pip install -r requirements.txt
+python pyqt_video_player.py
 ```
 
-## 如何執行
+## 執行單元測試
 
-安裝完依賴後，直接執行 pyqt_video_player.py 檔案：
-
-` python pyqt_video_player.py `
-
-
-##　未來規劃 (Roadmap)
-
-請參閱 video_player_roadmap.md 檔案，了解 v1.3 及更高版本的開發計畫。
-
-- v1.3: 進階媒體功能 (字幕支援、影片資訊)
-- v1.4: 未來展望 (拖曳排序清單、縮圖預覽等)
+```bash
+python -m pytest -v
+```
